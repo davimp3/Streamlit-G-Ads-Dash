@@ -15,51 +15,11 @@ df_data['Cost'] = pd.to_numeric(
 df_data['Ad_Date'] = pd.to_datetime(df_data['Ad_Date'], dayfirst=True)
 
 
-st.title("Indicador ADS.📈")
+min_date = df_data['Ad_Date'].min().date()
+max_date = df_data['Ad_Date'].max().date()
 
-col_graf, col_metrics = st.columns([100, 50])
-
-with col_graf:
-    campaign_option= ["Todas"] + list(df_data['Campaign_Name'].unique())
-    filtered_campaign = st.selectbox(
-        "Selecione a Campanha:",
-        campaign_option
-    )
-
-    if filtered_campaign != "Todas":
-        df_filtered = df_data[df_data['Campaign_Name'] == filtered_campaign]
-    else: df_filtered = df_data.copy()
-
-
-    df_campanhas = df_filtered.groupby('Campaign_Name')['Campaign_Name'].count().reset_index(name='Campanha')
-    graf_pizza = px.pie(
-        df_campanhas,
-        values='Campanha',
-        names='Campaign_Name',
-        title='Campanhas Ativas'
-    )
-    st.plotly_chart(graf_pizza, use_container_width=True)
-
-    df_data['Campaign_Name'].unique()
-    
-
-
-with col_metrics:
-    total_money = df_filtered['Cost'].sum()
-    total_lead = df_filtered['Leads'].sum()
-
-    st.metric(label="Total de Verba Gerenciada", value=f"${int(total_money):,}")
-    st.metric(label="Total de Leads Gerados:", value=f"{int(total_lead):,}")
-
-
-col_uptime, col2 = st.columns(2)
-
-with col_uptime:
-
-    min_date = df_filtered['Ad_Date'].min().date()
-    max_date = df_filtered['Ad_Date'].min().date()
-
-    data_range = st.slider(
+st.sidebar.header("Filtros")
+date_range = st.sidebar.slider(
         label="Período",
         min_value=min_date,
         max_value=max_date,
@@ -67,22 +27,59 @@ with col_uptime:
         format="DD/MM/YYYY"
     )
 
-    star_date = pd.to_datetime(range[0])
-    end_date = pd.to_datetime(range[1])
+start_date = pd.to_datetime(date_range[0])
+end_date = pd.to_datetime(date_range[1])
 
-    df_filtered_by_date = df_filtered[(df_filtered['Ad_Date']>= star_date) & (df_filtered['Ad_Date'] <= end_date)]
-    
-    if not df_filtered_by_date.empty:
+df_filtered_by_date = df_data[(df_data['Ad_Date'] >= start_date) & (df_data['Ad_Date']<= end_date)]
 
-        df_filtered_by_date = df_filtered_by_date.sort_values(by='Ad_Date')
-        df_custo_por_data = df_filtered_by_date.groupby('Ad_Date')['Cost'].sum().reset_index()
+st.title("Indicador ADS.📈")
 
-        graf_linha = px.line(
-            df_custo_por_data,
-            x='Ad_Date',
-            y='Cost',
-            title='Evolução do Custo no Período Selecionado'
-        )
-        st.plotly_chart(graf_linha, use_container_width=True)
-    else:
-        st.warning("Nenhum dado encontrado para o período selecionado.")
+   
+campaign_option= ["Todas"] + list(df_data['Campaign_Name'].unique())
+filtered_campaign = st.sidebar.selectbox(
+    "Selecione a Campanha:",
+    campaign_option
+    )
+
+if filtered_campaign != "Todas":
+        df_final = df_filtered_by_date[df_filtered_by_date['Campaign_Name'] == filtered_campaign]
+else: df_final = df_filtered_by_date.copy()
+
+if df_final.empty:
+        st.warning("Não há dados para os filtros selecionados")
+else:
+        col_graf, col_uptime, col_metrics  = st.columns([60,15,30])
+
+        with col_graf:
+
+            df_campanhas = df_final.groupby('Campaign_Name').size().reset_index(name="Campanha")
+            graf_pizza = px.pie(
+            df_campanhas,
+            values='Campanha',
+            names='Campaign_Name',
+            title='Campanhas Ativas'
+            )
+            st.plotly_chart(graf_pizza, use_container_width=True)
+
+
+        with col_metrics:
+             total_money = df_final['Cost'].sum()
+             total_lead = df_final['Leads'].sum()
+
+             st.metric(label="Total de Verba Gerenciada", value=f"${int(total_money):,}")
+             st.metric(label="Total de Leads Gerados:", value=f"{int(total_lead):,}")
+        
+
+        with col_uptime:
+
+             df_final_ordenade = df_final.sort_values(by='Ad_Date')
+             df_cost_by_date = df_final_ordenade.groupby('Ad_Date')['Cost'].sum().reset_index()
+
+             line_chart = px.line(
+               df_cost_by_date,
+               x='Ad_Date',
+               y='Cost',
+               title='Evolução da verba por Período'
+         )
+
+        st.plotly_chart(line_chart, use_container_width=True)
