@@ -6,7 +6,10 @@ st.set_page_config(
     layout="wide"
 )
 
+
 df_data = pd.read_csv("Google-Ads.csv")
+st.session_state['ads_data'] = df_data
+
 
 df_data['Cost'] = pd.to_numeric(
     df_data['Cost'].replace('[\$,]', '', regex=True), errors='coerce'
@@ -69,6 +72,7 @@ else:
              st.metric(label="Total de Verba Gerenciada", value=f"${int(total_money):,}")
              st.metric(label="Total de Leads Gerados:", value=f"{int(total_lead):,}")
         
+        st.divider()
 
         with col_uptime:
 
