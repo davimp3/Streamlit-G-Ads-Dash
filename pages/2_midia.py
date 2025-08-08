@@ -36,15 +36,43 @@ filtered_campaign = st.sidebar.selectbox(
         campaign_option
 )
 
+df_final = df_filtered_by_date.copy()
+
 if filtered_campaign != 'Todas':
-        df_final = df_filtered_by_date[df_filtered_by_date['Campaign_Name'] == filtered_campaign]
+        df_final = df_final[df_final['Campaign_Name'] == filtered_campaign]
 else: df_final = df_filtered_by_date.copy()
+
+
+
+colmetric1, colmetric2, col3, coldevice_type= st.columns([30,30,2, 40])
+
+
+device_type_option = ["Todos"] + list(df_data['Device'].unique())
+filtered_device = st.sidebar.selectbox(
+        "Selecione o dispositivo:",
+        device_type_option
+)
+
+
+if filtered_device != "Todos":
+        df_final = df_final[df_final['Device'] == filtered_device]
+else: df_final = df_final.copy()
+
+
+with coldevice_type:
+        df_device = df_final.groupby('Device').size().reset_index(name="Dispositivo")
+        pizza_device = px.pie(
+                df_device,
+                values='Dispositivo',
+                names='Device',
+                title='Tipo de Dispositivo'
+        )
+
+        st.plotly_chart(pizza_device, user_container_width=True)
 
 
 total_impression = df_final['Impressions'].sum()
 total_clicks = df_final['Clicks'].sum()
-
-colmetric1, colmetric2, col3 = st.columns([30,30,40])
 
 with colmetric1:
 
@@ -58,4 +86,3 @@ with colmetric2:
         label="Total de Cliques:",
         value=f"{(total_clicks):,}"
         )
-
