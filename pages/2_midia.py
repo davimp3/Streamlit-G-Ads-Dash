@@ -44,7 +44,7 @@ else: df_final = df_filtered_by_date.copy()
 
 
 
-colmetric1, colmetric2, col3, coldevice_type= st.columns([30,30,2, 40])
+colmetric1,coldevice_type, col4= st.columns([30,30,30])
 
 
 device_type_option = ["Todos"] + list(df_data['Device'].unique())
@@ -81,7 +81,7 @@ with colmetric1:
         value=f"{(total_impression):,}"
         )
 
-with colmetric2:
+
         st.metric(
         label="Total de Cliques:",
         value=f"{(total_clicks):,}"
